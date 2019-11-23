@@ -30,7 +30,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\BomberManSprites.png">
+    <Image Include="..\BomberManSprites.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>

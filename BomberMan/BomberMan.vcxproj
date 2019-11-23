@@ -148,7 +148,7 @@
     <ResourceCompile Include="BomberMan.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\BomberManSprites.png" />
+    <Image Include="..\BomberManSprites.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
