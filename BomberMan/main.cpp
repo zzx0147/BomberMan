@@ -12,6 +12,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	LPSTR    lpCmdLine,
 	int       nCmdShow)
 {
+	HBRUSH bgBrush = CreateSolidBrush(RGB(56,135,0));
+
 	WNDCLASS wc = { 0 };
 	wc.style = 0;			   	
 	wc.lpfnWndProc = WndProc;		
@@ -20,7 +22,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	wc.hInstance = hInstance; 			
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);				
 	wc.hCursor = LoadCursor(0, IDC_ARROW);			        
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); 
+	wc.hbrBackground = bgBrush;
 	wc.lpszMenuName = NULL;								    
 	wc.lpszClassName = szWndAppName;				        
 
@@ -42,6 +44,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		DispatchMessage(&Message); 
 	}
 
+	DeleteObject(bgBrush);
+
 	return 0;
 }
 
@@ -49,10 +53,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc, MemDC;
 	PAINTSTRUCT ps;
-	RECT rt = { 50, 50, 400, 400 };
 	HBITMAP MyBitmap, OldBitmap;
 
-	switch (message) {
+	switch (message) 
+	{
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -60,12 +64,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		MemDC = CreateCompatibleDC(hdc);
+
 		MyBitmap = LoadBitmap(g_hInstance, MAKEINTRESOURCE(IDB_SPRITES));
 		OldBitmap = (HBITMAP)SelectObject(MemDC, MyBitmap);
-		StretchBlt(hdc, 0, 0, 224, 383, MemDC, 0, 0, 224, 383, SRCCOPY);
+		StretchBlt(hdc, 0, 0, 48, 48, MemDC, 64, 0, 16, 16, SRCCOPY);
+
 		SelectObject(MemDC, OldBitmap);
 		DeleteObject(MyBitmap);
 		DeleteDC(MemDC);
+
 		EndPaint(hWnd, &ps);
 		return 0;
 	}
