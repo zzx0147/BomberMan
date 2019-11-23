@@ -140,9 +140,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SpritesLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SpritesLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BomberMan.rc" />
