@@ -139,10 +139,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GameMap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SpritesLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GameMap.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpritesLoader.h" />
   </ItemGroup>

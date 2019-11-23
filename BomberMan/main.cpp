@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include "resource.h"
 #include "SpritesLoader.h"
+#include "GameMap.h"
+
 #pragma comment(lib,"Msimg32.lib")
 
 TCHAR szWndAppName[] = TEXT("WndTest");
@@ -8,6 +10,7 @@ TCHAR szWndAppName[] = TEXT("WndTest");
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE g_hInstance;
+GameMap map;
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -28,23 +31,35 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	wc.lpszMenuName = NULL;								    
 	wc.lpszClassName = szWndAppName;				        
 
-	g_hInstance = hInstance;
 
 	if (!RegisterClass(&wc))
 		return -1;
 
+	g_hInstance = hInstance;
+
+	map.Init();
+
 	HWND   hWnd; 
-	hWnd = CreateWindow(szWndAppName, szWndAppName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
+	hWnd = CreateWindow(szWndAppName, szWndAppName,WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, 736, 759,
+		NULL, NULL, hInstance, NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 
-	MSG Message;
 
-	while (GetMessage(&Message, 0, 0, 0))
+	MSG msg = { 0 };
+	while (WM_QUIT != msg.message)
 	{
-		TranslateMessage(&Message);  
-		DispatchMessage(&Message); 
+		if(PeekMessage(&msg,0,0,0,PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+		}
 	}
+
 
 	DeleteObject(bgBrush);
 
@@ -59,13 +74,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message) 
 	{
+		case WM_KEYDOWN:
+			switch (wParam)
+			{
+				case VK_ESCAPE:
+					PostQuitMessage(0);
+					break;
+			}
+			return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		SpritesLoader::DrawSprite(hdc,g_hInstance,0,0,0,3);
+
+		map.Render(g_hInstance, hdc);
+
 		EndPaint(hWnd, &ps);
 		return 0;
 	}
