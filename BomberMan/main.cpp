@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include "resource.h"
+#pragma comment(lib,"Msimg32.lib")
 
 TCHAR szWndAppName[] = TEXT("WndTest");
 
@@ -64,15 +65,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		MemDC = CreateCompatibleDC(hdc);
-
 		MyBitmap = LoadBitmap(g_hInstance, MAKEINTRESOURCE(IDB_SPRITES));
 		OldBitmap = (HBITMAP)SelectObject(MemDC, MyBitmap);
-		StretchBlt(hdc, 0, 0, 48, 48, MemDC, 64, 0, 16, 16, SRCCOPY);
-
+		TransparentBlt(hdc, 0, 0, 48, 48, MemDC, 64, 0, 16, 16, RGB(56, 135, 0));
+		//StretchBlt(hdc, 0, 0, 224, 383, MemDC, 0, 0, 224, 383, SRCCOPY);
 		SelectObject(MemDC, OldBitmap);
 		DeleteObject(MyBitmap);
 		DeleteDC(MemDC);
-
 		EndPaint(hWnd, &ps);
 		return 0;
 	}
