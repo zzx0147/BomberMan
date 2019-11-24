@@ -2,6 +2,9 @@
 #include "resource.h"
 #include "SpritesLoader.h"
 #include "GameMap.h"
+#include "InputClass.h"
+#include "Character.h"
+#include "TimeClass.h"
 
 #pragma comment(lib,"Msimg32.lib")
 
@@ -11,6 +14,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE g_hInstance;
 GameMap map;
+Character character;
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -18,7 +22,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	int       nCmdShow)
 {
 	HBRUSH bgBrush = CreateSolidBrush(RGB(56,135,0));
-
+	
 	WNDCLASS wc = { 0 };
 	wc.style = 0;			   	
 	wc.lpfnWndProc = WndProc;		
@@ -31,12 +35,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	wc.lpszMenuName = NULL;								    
 	wc.lpszClassName = szWndAppName;				        
 
-
 	if (!RegisterClass(&wc))
 		return -1;
 
 	g_hInstance = hInstance;
-
+	InputClass::Initialize();
+	SpritesLoader::Initialize(hInstance);
 	map.Init();
 
 	HWND   hWnd; 
@@ -47,9 +51,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	ShowWindow(hWnd, nCmdShow);
 
 
+
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
 	{
+
 		if(PeekMessage(&msg,0,0,0,PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -57,10 +63,14 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		}
 		else
 		{
+			TimeClass::CheckTime();
+			character.Frame(hWnd);
+			//InvalidateRect(hWnd,NULL,false);
 		}
 	}
 
 
+	SpritesLoader::Release();
 	DeleteObject(bgBrush);
 
 	return 0;
@@ -71,10 +81,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	PAINTSTRUCT ps;
 
-
 	switch (message) 
 	{
 		case WM_KEYDOWN:
+			InputClass::KeyDown((unsigned int)wParam);
 			switch (wParam)
 			{
 				case VK_ESCAPE:
@@ -82,6 +92,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 			}
 			return 0;
+		case WM_KEYUP:
+			InputClass::KeyUp((unsigned int)wParam);
+			return 0;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -90,6 +104,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint(hWnd, &ps);
 
 		map.Render(g_hInstance, hdc);
+		character.Render(g_hInstance, hdc);
+		
+		wchar_t str[100];
+		int len = wsprintf(str,L"%f",TimeClass::GetDeltaTime());
+		TextOut(hdc, 0, 0,str, len);
 
 		EndPaint(hWnd, &ps);
 		return 0;

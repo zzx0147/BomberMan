@@ -37,14 +37,6 @@ void GameMap::Init()
 	}
 }
 
-void GameMap::Release()
-{
-}
-
-void GameMap::Update()
-{
-}
-
 void GameMap::Render(HINSTANCE hInstance, HDC hdc)
 {
 	for (int i = 0; i < _height; ++i)
