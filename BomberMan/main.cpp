@@ -110,7 +110,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		map.Render(g_hInstance, hdc);
 		character.Render(g_hInstance, hdc);
-		
+		SpritesLoader::Render(g_hInstance,hdc);
+
 		double delta = TimeClass::GetDeltaTime();
 		TCHAR str[50];
 		int len = _stprintf_s(str, TEXT("%f"), 1/delta);
