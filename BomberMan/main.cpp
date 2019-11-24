@@ -80,7 +80,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			{
 				updateTime = 0;
 
-				character.Frame(deltaTime);
+				character.Frame();
 
 				HDC hdcMain = GetDC(hWnd);
 
@@ -88,7 +88,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				character.Render();
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
-
 
 				if (1.0 < fpsShowTime)
 				{

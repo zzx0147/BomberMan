@@ -20,18 +20,22 @@ void Character::Frame()
 
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
+		//if (GameMap::IsMovePoint(x - 1, y))
 		x -= moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_RIGHT))
 	{
+		//if (GameMap::IsMovePoint(x + 1, y))
 		x += moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_UP))
 	{
+		//if (GameMap::IsMovePoint(x, y - 1))
 		y -= moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_DOWN))
 	{
+		//if (GameMap::IsMovePoint(x, y + 1))
 		y += moveSpeed;
 	}
 
