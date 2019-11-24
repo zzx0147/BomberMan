@@ -21,6 +21,5 @@ void TimeClass::CheckTime()
 double TimeClass::GetDeltaTime()
 {
 	std::chrono::duration<double> sec = now - pre;
-	sec.count();
-	return 0;
+	return sec.count();
 }

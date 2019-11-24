@@ -5,6 +5,11 @@
 #include "InputClass.h"
 #include "Character.h"
 #include "TimeClass.h"
+#include <string>
+#include <stdio.h>
+#include <tchar.h>
+
+using namespace std;
 
 #pragma comment(lib,"Msimg32.lib")
 
@@ -65,7 +70,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		{
 			TimeClass::CheckTime();
 			character.Frame(hWnd);
-			//InvalidateRect(hWnd,NULL,false);
+			InvalidateRect(hWnd,NULL,false);
 		}
 	}
 
@@ -106,10 +111,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		map.Render(g_hInstance, hdc);
 		character.Render(g_hInstance, hdc);
 		
-		wchar_t str[100];
-		int len = wsprintf(str,L"%f",TimeClass::GetDeltaTime());
-		TextOut(hdc, 0, 0,str, len);
-
+		double delta = TimeClass::GetDeltaTime();
+		TCHAR str[50];
+		int len = _stprintf_s(str, TEXT("%f"), 1/delta);
+		TextOut(hdc, 0, 0,str,len);
 		EndPaint(hWnd, &ps);
 		return 0;
 	}
