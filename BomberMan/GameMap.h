@@ -4,15 +4,15 @@
 class GameMap
 {
 private:
-	int _map[15][15] = { 0 };
+	static int _map[15][15];
 
-	const int _width = 15;
-	const int _height = 15;
+	static const int _width = 15;
+	static const int _height = 15;
 public:
-	GameMap();
-	~GameMap();
+	static void Init();
+	static void Update();
+	static void Render();
 
-	void Init();
-	void Render(HINSTANCE hInstance, HDC hdc);
+	static const bool IsMovePoint(const int x, const int y);
 };
 

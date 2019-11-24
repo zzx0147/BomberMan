@@ -1,10 +1,12 @@
 #include "Character.h"
 #include "SpritesLoader.h"
 #include "InputClass.h"
+#include "GameMap.h"
 
-Character::Character():x(0),y(0)
+// 
+Character::Character() :x(48), y(48)
 {
-	
+
 }
 
 
@@ -12,45 +14,34 @@ Character::~Character()
 {
 }
 
-void Character::Frame(HWND hWnd)
+void Character::Frame()
 {
-	bool haveToRender = false;
+	double moveSpeed = 5;
 
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
-		--x;
-		haveToRender = true;
+		x -= moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_RIGHT))
 	{
-		++x;
-		haveToRender = true;
+		x += moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_UP))
 	{
-		--y;
-		haveToRender = true;
+		y -= moveSpeed;
 	}
 	else if (InputClass::IsKeyDown(VK_DOWN))
 	{
-		++y;
-		haveToRender = true;
+		y += moveSpeed;
 	}
 
-	if (haveToRender)
-	{
-		RECT r;
-		r.top = y - 1;
-		r.bottom = y + 49;
-		r.left = x - 1;
-		r.right = x + 49;
-		InvalidateRect(hWnd, &r, true);
-	}
+	x = x < 0 ? 0 : x + 48 > 720 ? 720 - 48 : x;
+	y = y < 0 ? 0 : y + 48 > 720 ? 720 - 48 : y;
 }
 
-void Character::Render(HINSTANCE hInstance,HDC hdc)
+void Character::Render()
 {
-	SpritesLoader::DrawSprite(hdc,hInstance,x, y, 3, 0);
+	SpritesLoader::DrawSprite(x, y, 4, 0);
 }
 
 RECT Character::GetCharacterRect()
@@ -58,7 +49,7 @@ RECT Character::GetCharacterRect()
 	RECT r;
 	r.top = y;
 	r.left = x;
-	r.right = y + 48;
+	r.right = x + 48;
 	r.bottom = y + 48;
 
 	return RECT();

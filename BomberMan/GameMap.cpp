@@ -1,18 +1,15 @@
 #include "GameMap.h"
 
 #include "SpritesLoader.h"
+#include <cmath>
 
 #define WALL 2
 #define WALL_SPR_X 3
 #define WALL_SPR_Y 3
 
-GameMap::GameMap()
-{
-}
-
-GameMap::~GameMap()
-{
-}
+int GameMap::_map[15][15];
+const int GameMap::_width;
+const int GameMap::_height;
 
 void GameMap::Init()
 {
@@ -37,7 +34,20 @@ void GameMap::Init()
 	}
 }
 
-void GameMap::Render(HINSTANCE hInstance, HDC hdc)
+void GameMap::Update()
+{
+	for (int i = 0; i < _height; ++i)
+	{
+		for (int j = 0; j < _width; ++j)
+		{
+			_map[i][j] = 0;
+		}
+	}
+
+	Init();
+}
+
+void GameMap::Render() 
 {
 	for (int i = 0; i < _height; ++i)
 	{
@@ -46,9 +56,28 @@ void GameMap::Render(HINSTANCE hInstance, HDC hdc)
 			switch (_map[i][j])
 			{
 				case WALL:
-					SpritesLoader::DrawSprite(hdc, hInstance, i * 48, j * 48, WALL_SPR_X, WALL_SPR_Y);
+					SpritesLoader::DrawSprite(i * 48, j * 48, WALL_SPR_X, WALL_SPR_Y);
 					break;
 			}
 		}
 	}
+}
+
+const bool GameMap::IsMovePoint(const int px, const int py)
+{
+	double x = px / 48.0;
+	double y = py / 48.0;
+
+	if (_map[(int)floor(y)][(int)floor(x)])
+		return false;
+
+	if (_map[(int)ceil(y)][(int)ceil(x)])
+		return false;
+
+	if (_map[(int)floor(y)][(int)ceil(x)])
+		return false;
+
+	if (_map[(int)ceil(y)][(int)floor(x)])
+		return false;
+	return true;
 }

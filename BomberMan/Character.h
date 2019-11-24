@@ -6,11 +6,11 @@ public:
 	Character();
 	~Character();
 
-	void Frame(HWND hWnd);
-	void Render(HINSTANCE,HDC);
+	void Frame();
+	void Render();
 	RECT GetCharacterRect();
 private:
-	int x;
-	int y;
+	double x;
+	double y;
 };
 
