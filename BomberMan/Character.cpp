@@ -1,4 +1,8 @@
 #include "Character.h"
+
+#include <cmath>
+#include <string>
+
 #include "SpritesLoader.h"
 #include "InputClass.h"
 #include "GameMap.h"
@@ -20,27 +24,52 @@ void Character::Frame()
 
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
-		//if (GameMap::IsMovePoint(x - 1, y))
-		x -= moveSpeed;
+		y = round(y / 48) * 48;
+		if (GameMap::IsMovePoint(x - moveSpeed, y))
+		{
+			x -= moveSpeed;
+		}
+		//if (GameMap::IsMovePoint(x - 3, y))
+		//{
+		//	x -= moveSpeed;
+		//}
+		//else
+		//{
+		//	y = round((int)y);
+		//	if (GameMap::IsMovePoint(x - 3, y))
+		//	{
+		//		x -= moveSpeed;
+		//	}
+		//}
 	}
 	else if (InputClass::IsKeyDown(VK_RIGHT))
 	{
-		//if (GameMap::IsMovePoint(x + 1, y))
-		x += moveSpeed;
+		y = round(y / 48) * 48;
+		if (GameMap::IsMovePoint(x + moveSpeed, y))
+		{
+			x += moveSpeed;
+		}
 	}
-	else if (InputClass::IsKeyDown(VK_UP))
+	
+	if (InputClass::IsKeyDown(VK_UP))
 	{
-		//if (GameMap::IsMovePoint(x, y - 1))
-		y -= moveSpeed;
+		x = round(x / 48) * 48;
+		if (GameMap::IsMovePoint(x, y - moveSpeed))
+		{
+			y -= moveSpeed;
+		}
 	}
 	else if (InputClass::IsKeyDown(VK_DOWN))
 	{
-		//if (GameMap::IsMovePoint(x, y + 1))
-		y += moveSpeed;
+		x = round(x / 48) * 48;
+		if (GameMap::IsMovePoint(x, y + moveSpeed))
+		{
+			y += moveSpeed;
+		}
 	}
 
-	x = x < 0 ? 0 : x + 48 > 720 ? 720 - 48 : x;
-	y = y < 0 ? 0 : y + 48 > 720 ? 720 - 48 : y;
+	x = x < 0 ? 0 : x + 48 > 672 ? 672 - 48 : x;
+	y = y < 0 ? 0 : y + 48 > 672 ? 672 - 48 : y;
 }
 
 void Character::Render()

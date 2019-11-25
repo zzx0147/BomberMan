@@ -7,6 +7,9 @@
 #define WALL_SPR_X 3
 #define WALL_SPR_Y 3
 
+#define BROKEWALL_SPR_X 4
+#define BROKEWALL_SPR_Y 3
+
 int GameMap::_map[15][15];
 const int GameMap::_width;
 const int GameMap::_height;
@@ -74,10 +77,5 @@ const bool GameMap::IsMovePoint(const int px, const int py)
 	if (_map[(int)ceil(y)][(int)ceil(x)])
 		return false;
 
-	if (_map[(int)floor(y)][(int)ceil(x)])
-		return false;
-
-	if (_map[(int)ceil(y)][(int)floor(x)])
-		return false;
 	return true;
 }
