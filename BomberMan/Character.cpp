@@ -1,80 +1,110 @@
 #include "Character.h"
 
 #include <cmath>
-#include <string>
 
+#include "BoomManager.h"
 #include "SpritesLoader.h"
 #include "InputClass.h"
 #include "GameMap.h"
 
-// 
 Character::Character() :x(48), y(48)
 {
 
 }
 
-
 Character::~Character()
 {
 }
 
-void Character::Frame()
+void Character::Frame(double deltaTime)
 {
-	double moveSpeed = 5;
+	static double aniResetTime = 0.0;
+	double moveSpeed = 3 * 48 * deltaTime;
 
+	aniResetTime += deltaTime;
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
-		y = round(y / 48) * 48;
-		if (GameMap::IsMovePoint(x - moveSpeed, y))
+		if (GameMap::IsMovePoint(x - moveSpeed, round(y / 48) * 48))
 		{
+			aniResetTime = 0;
+			_dir = eDirection::LEFT;
+
 			x -= moveSpeed;
+			y = round(y / 48) * 48;
+
+			_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
 		}
-		//if (GameMap::IsMovePoint(x - 3, y))
-		//{
-		//	x -= moveSpeed;
-		//}
-		//else
-		//{
-		//	y = round((int)y);
-		//	if (GameMap::IsMovePoint(x - 3, y))
-		//	{
-		//		x -= moveSpeed;
-		//	}
-		//}
 	}
 	else if (InputClass::IsKeyDown(VK_RIGHT))
 	{
-		y = round(y / 48) * 48;
-		if (GameMap::IsMovePoint(x + moveSpeed, y))
+		if (GameMap::IsMovePoint(x + moveSpeed, round(y / 48) * 48))
 		{
+			aniResetTime = 0;
+			_dir = eDirection::RIGHT;
+
 			x += moveSpeed;
+			y = round(y / 48) * 48;
+
+			_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
 		}
 	}
-	
+
 	if (InputClass::IsKeyDown(VK_UP))
 	{
-		x = round(x / 48) * 48;
-		if (GameMap::IsMovePoint(x, y - moveSpeed))
+		if (GameMap::IsMovePoint(round(x / 48) * 48, y - moveSpeed))
 		{
+			aniResetTime = 0;
+			_dir = eDirection::UP;
+
+			x = round(x / 48) * 48;
 			y -= moveSpeed;
+
+			_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
 		}
 	}
 	else if (InputClass::IsKeyDown(VK_DOWN))
 	{
-		x = round(x / 48) * 48;
-		if (GameMap::IsMovePoint(x, y + moveSpeed))
+		if (GameMap::IsMovePoint(round(x / 48) * 48, (y + moveSpeed)))
 		{
+			aniResetTime = 0;
+			_dir = eDirection::DOWN;
+
+			x = round(x / 48) * 48;
 			y += moveSpeed;
+
+			_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
 		}
 	}
 
-	x = x < 0 ? 0 : x + 48 > 672 ? 672 - 48 : x;
-	y = y < 0 ? 0 : y + 48 > 672 ? 672 - 48 : y;
+	if (InputClass::IsKeyDown(VK_SPACE))
+	{
+		if (GameMap::IsMovePoint(x, y))
+		{
+		//	BoomManager::CreateBoom(x, y);
+
+		}
+	}
+
+	x = x < 0 ? 0 : x > 720 - 48 ? 720 - 48 : x;
+	y = y < 0 ? 0 : y > 720 - 48 ? 720 - 48 : y;
+
+	if (.2f < aniResetTime)
+	{
+		aniResetTime = 0;
+		_aniSpeed = 1;
+	}
+
 }
 
 void Character::Render()
 {
-	SpritesLoader::DrawSprite(x, y, 4, 0);
+	switch (_dir)
+	{
+		case LEFT: SpritesLoader::DrawSprite(x, y, 0 + _aniSpeed, 0); break;
+		case DOWN: SpritesLoader::DrawSprite(x, y, 3 + _aniSpeed, 0); break;
+		case RIGHT: SpritesLoader::DrawSprite(x, y, 0 + _aniSpeed, 1); break;
+		case UP: SpritesLoader::DrawSprite(x, y, 3 + _aniSpeed, 1); break;
+	}
 }
 
 RECT Character::GetCharacterRect()

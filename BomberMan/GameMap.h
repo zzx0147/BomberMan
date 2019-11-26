@@ -13,6 +13,9 @@ public:
 	static void Update();
 	static void Render();
 
-	static const bool IsMovePoint(const int x, const int y);
+	static void SetBlock(const int x, const int y);
+	static void RemoveBlock(const int x, const int y);
+
+	static const bool IsMovePoint(const double px, const double py);
 };
 
