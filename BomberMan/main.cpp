@@ -1,13 +1,14 @@
 #include <Windows.h>
+
+#include <sstream>
+
 #include "resource.h"
 #include "SpritesLoader.h"
 #include "GameMap.h"
 #include "InputClass.h"
 #include "Character.h"
 #include "TimeClass.h"
-#include <string>
-#include <stdio.h>
-#include <tchar.h>
+#include "BoomManager.h"
 
 using namespace std;
 
@@ -44,8 +45,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		return -1;
 
 	g_hInstance = hInstance;
+
+	BoomManager::Init();
+
+	TimeClass::Init();
+	
 	InputClass::Initialize();
+
 	SpritesLoader::Initialize(hInstance);
+
 	map.Init();
 
 	HWND hWnd; 
@@ -70,22 +78,24 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		}
 
 		{
-			TimeClass::CheckTime();
+			TimeClass::Update();
 
 			double deltaTime = TimeClass::GetDeltaTime();
 			updateTime += deltaTime;
 			fpsShowTime += deltaTime;
 
+			character.Frame(deltaTime);
+			BoomManager::Update(deltaTime);
+
 			if (1.0 / 60.0 < updateTime)
 			{
 				updateTime = 0;
-
-				character.Frame();
 
 				HDC hdcMain = GetDC(hWnd);
 
 				map.Render();
 				character.Render();
+				BoomManager::Render();
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
 
@@ -97,9 +107,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 					fps = 1.0 / deltaTime;
 				}
 
-				TCHAR str[50];
-				int len = wsprintf(str, TEXT("FPS : %d"), fps);
-				TextOut(hdcMain, 0, 0, str, len);
+				wstringstream str;
+				str.clear();
+				str.str(L"");
+				str << "FPS : " << fps << ", " << deltaTime;
+				TextOut(hdcMain, 0, 0, str.str().c_str(), str.str().length());
 
 				ReleaseDC(hWnd, hdcMain);
 			}

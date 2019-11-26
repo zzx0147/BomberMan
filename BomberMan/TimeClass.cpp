@@ -1,8 +1,11 @@
 #include "TimeClass.h"
-#include <chrono>
 
-std::chrono::system_clock::time_point TimeClass::now;
-std::chrono::system_clock::time_point TimeClass::pre;
+#include <Windows.h>
+
+double TimeClass::_secondsPerCount = 0.0;
+
+double TimeClass::_prevTime = 0.0;
+double TimeClass::_deltaTime = 0.0;
 
 TimeClass::TimeClass()
 {
@@ -12,14 +15,30 @@ TimeClass::~TimeClass()
 {
 }
 
-void TimeClass::CheckTime()
+void TimeClass::Init()
 {
-	pre = now;
-	now = std::chrono::system_clock::now();
+	__int64 countPerSec;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&countPerSec);
+
+	_secondsPerCount = 1.0f / (double)countPerSec;
+
+	__int64 curTime;
+	QueryPerformanceCounter((LARGE_INTEGER*)&curTime);
+
+	_deltaTime = 0;
+	_prevTime = curTime;
+}
+
+void TimeClass::Update()
+{
+	__int64 curTime;
+	QueryPerformanceCounter((LARGE_INTEGER*)&curTime);
+
+	_deltaTime = (curTime - _prevTime) * _secondsPerCount;
+	_prevTime = curTime;
 }
 
 double TimeClass::GetDeltaTime()
 {
-	std::chrono::duration<double> sec = now - pre;
-	return sec.count();
+	return _deltaTime;
 }

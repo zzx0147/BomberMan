@@ -66,16 +66,32 @@ void GameMap::Render()
 	}
 }
 
-const bool GameMap::IsMovePoint(const int px, const int py)
+void GameMap::SetBlock(const int x, const int y)
 {
-	double x = px / 48.0;
-	double y = py / 48.0;
+	int px = x / 48;
+	int py = y / 48;
+	if (_width <= px || _height <= py) return;
 
-	if (_map[(int)floor(y)][(int)floor(x)])
-		return false;
+	_map[py][px] = 1;
+}
 
-	if (_map[(int)ceil(y)][(int)ceil(x)])
-		return false;
+void GameMap::RemoveBlock(const int x, const int y)
+{
+	int px = x / 48;
+	int py = y / 48;
+	if (_width <= px || _height <= py) return;
+
+	_map[py][px] = 0;
+}
+
+const bool GameMap::IsMovePoint(const double x, const double y)
+{
+	double px = x / 48;
+	double py = y / 48;
+	if (_map[(int)floor(py)][(int)floor(px)]) return false;
+	if (_map[(int) ceil(py)][(int) ceil(px)]) return false;
+	if (_map[(int)floor(py)][(int) ceil(px)]) return false;
+	if (_map[(int) ceil(py)][(int)floor(px)]) return false;
 
 	return true;
 }

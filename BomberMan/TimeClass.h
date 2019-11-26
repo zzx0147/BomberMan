@@ -6,13 +6,15 @@ public:
 	TimeClass();
 	~TimeClass();
 	
-	static void CheckTime();
-	static double GetDeltaTime();
-	
-private:
-	static std::chrono::system_clock::time_point now;
-	static std::chrono::system_clock::time_point pre;
+	static void Init();
+	static void Update();
 
+	static double GetDeltaTime();
+private:
+	static double _secondsPerCount;
+
+	static double _prevTime;
+	static double _deltaTime;
 };
 
 

@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Boom.cpp" />
+    <ClCompile Include="BoomManager.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="GameMap.cpp" />
     <ClCompile Include="InputClass.cpp" />
@@ -147,6 +149,8 @@
     <ClCompile Include="TimeClass.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Boom.h" />
+    <ClInclude Include="BoomManager.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="GameMap.h" />
     <ClInclude Include="InputClass.h" />
