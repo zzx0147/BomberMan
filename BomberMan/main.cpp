@@ -1,14 +1,17 @@
 #include <Windows.h>
 
 #include <sstream>
+#include <crtdbg.h>
 
 #include "resource.h"
-#include "SpritesLoader.h"
-#include "GameMap.h"
+
 #include "InputClass.h"
-#include "Character.h"
 #include "TimeClass.h"
-#include "BoomManager.h"
+#include "Player.h"
+#include "GameMap.h"
+#include "BombManager.h"
+
+#include "SpritesLoader.h"
 
 using namespace std;
 
@@ -19,16 +22,14 @@ TCHAR szWndAppName[] = TEXT("WndTest");
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE g_hInstance;
-GameMap map;
-Character character;
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR    lpCmdLine,
 	int       nCmdShow)
 {
-	HBRUSH bgBrush = CreateSolidBrush(RGB(56,135,0));
-	
+	HBRUSH bgBrush = CreateSolidBrush(RGB(56, 135, 0));
+
 	WNDCLASS wc = { 0 };
 	wc.style = 0;
 	wc.lpfnWndProc = WndProc;
@@ -46,18 +47,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	g_hInstance = hInstance;
 
-	BoomManager::Init();
-
-	TimeClass::Init();
-	
 	InputClass::Initialize();
+	TimeClass::Init();
 
 	SpritesLoader::Initialize(hInstance);
 
-	map.Init();
+	GameMap::Init();
+	Player::Init();
 
-	HWND hWnd; 
-	hWnd = CreateWindow(szWndAppName, szWndAppName,WS_OVERLAPPEDWINDOW,
+	HWND hWnd;
+	hWnd = CreateWindow(szWndAppName, szWndAppName, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 736, 759,
 		NULL, NULL, hInstance, NULL);
 
@@ -66,12 +65,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	double updateTime = 0.0;
 
 	double fpsShowTime = 0.0;
-	int fps = 0;
+	double fps = 0;
+	wstringstream str;
 
 	MSG msg = { 0 };
-	while (WM_QUIT != msg.message)
+	while (WM_QUIT != msg.message && !InputClass::IsKeyDown(VK_ESCAPE))
 	{
-		if(PeekMessage(&msg,0,0,0,PM_REMOVE))
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -84,8 +84,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			updateTime += deltaTime;
 			fpsShowTime += deltaTime;
 
-			character.Frame(deltaTime);
-			BoomManager::Update(deltaTime);
+			Player::Update(deltaTime);
+			BombManager::Update(deltaTime);
 
 			if (1.0 / 60.0 < updateTime)
 			{
@@ -93,24 +93,26 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 				HDC hdcMain = GetDC(hWnd);
 
-				map.Render();
-				character.Render();
-				BoomManager::Render();
+				GameMap::Render();
+				BombManager::Render();
+
+				Player::Render();
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
 
+				// FPS Show
+				++fps;
 				if (1.0 < fpsShowTime)
 				{
 					fpsShowTime = 0;
 
-					// FPS Show
-					fps = 1.0 / deltaTime;
+					str.clear();
+					str.str(L"");
+					str << "FPS : " << fps;
+
+					fps = 0;
 				}
 
-				wstringstream str;
-				str.clear();
-				str.str(L"");
-				str << "FPS : " << fps << ", " << deltaTime;
 				TextOut(hdcMain, 0, 0, str.str().c_str(), str.str().length());
 
 				ReleaseDC(hWnd, hdcMain);
@@ -119,31 +121,26 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	}
 
 	SpritesLoader::Release();
+
+	BombManager::Release();
+
 	DeleteObject(bgBrush);
+
+	_CrtDumpMemoryLeaks();
 
 	return 0;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message) 
+	switch (message)
 	{
-		case WM_KEYDOWN:
-			InputClass::KeyDown((unsigned int)wParam);
-			switch (wParam)
-			{
-				case VK_ESCAPE:
-					PostQuitMessage(0);
-					break;
-			}
-			return 0;
-		case WM_KEYUP:
-			InputClass::KeyUp((unsigned int)wParam);
-			return 0;
+		case WM_KEYDOWN: InputClass::KeyDown((unsigned int)wParam); return 0;
+		case WM_KEYUP: InputClass::KeyUp((unsigned int)wParam); return 0;
 
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);

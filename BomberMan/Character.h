@@ -15,14 +15,8 @@ public:
 	Character();
 	~Character();
 
-	void Frame(double deltaTime);
-	void Render();
-	RECT GetCharacterRect();
-private:
-	double x;
-	double y;
-
-	eDirection _dir = eDirection::DOWN;
-	double _aniSpeed = 0;
+	virtual void Init() = 0;
+	virtual void Update(const double deltaTime) = 0;
+	virtual void Render() = 0;
 };
 

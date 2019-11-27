@@ -139,21 +139,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Boom.cpp" />
-    <ClCompile Include="BoomManager.cpp" />
+    <ClCompile Include="Bomb.cpp" />
+    <ClCompile Include="BombManager.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="GameMap.cpp" />
     <ClCompile Include="InputClass.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="SpritesLoader.cpp" />
     <ClCompile Include="TimeClass.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Boom.h" />
-    <ClInclude Include="BoomManager.h" />
+    <ClInclude Include="Bomb.h" />
+    <ClInclude Include="BombManager.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="GameMap.h" />
     <ClInclude Include="InputClass.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpritesLoader.h" />
     <ClInclude Include="TimeClass.h" />

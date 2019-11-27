@@ -1,5 +1,5 @@
 #pragma once
-class Boom 
+class Bomb
 {
 private:
 	int _idxNum;
@@ -7,11 +7,14 @@ private:
 	double _x;
 	double _y;
 
-	double _aniSpeed = 0;
-	double _delTime = 0;
+	double _aniSpeed;
+	double _delTime;
+
+	bool _isActive;
+	bool _isOnPlayer;
 public:
-	Boom();
-	~Boom();
+	Bomb();
+	~Bomb();
 
 	void Burst();
 
