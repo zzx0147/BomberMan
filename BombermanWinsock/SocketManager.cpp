@@ -15,6 +15,7 @@ void err_quit(TCHAR *msg)
 		(LPTSTR)&lpMsgBuf, 0, NULL);
 	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
+	system("pause");
 	exit(1);
 }
 
@@ -34,19 +35,18 @@ void err_display(TCHAR *msg)
 
 SocketManager::SocketManager()
 {
+	if (WSAStartup(MAKEWORD(2, 2), &_wsa) != 0) return;
+	isSpreadIpOn = false;
 }
 
 SocketManager::~SocketManager()
 {
+	WSACleanup();
 }
 
 int SocketManager::Send()
 {
 	int retval;
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
 	// socket()
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock == INVALID_SOCKET) err_quit(TEXT("socket()"));
@@ -88,18 +88,12 @@ int SocketManager::Send()
 	}
 	// closesocket()
 	closesocket(sock);
-	// 윈속 종료
-	WSACleanup();
 	return 0;
 }
 
 int SocketManager::Recive()
 {
 	int retval;
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
 	// socket()
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock == INVALID_SOCKET) err_quit(TEXT("socket()"));
@@ -148,8 +142,6 @@ int SocketManager::Recive()
 	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
 	// closesocket()
 	closesocket(sock);
-	// 윈속 종료
-	WSACleanup();
 	return 0;
 }
 
@@ -157,9 +149,6 @@ bool SocketManager::FindServer(unsigned long& serverIpOutput)
 {
 	bool serverFound = false;
 	int retval;
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
 
 	// socket()
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -219,7 +208,6 @@ bool SocketManager::FindServer(unsigned long& serverIpOutput)
 	retval = setsockopt(sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
 	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
 	closesocket(sock);
-	WSACleanup();
 
 	return serverFound;
 }
@@ -227,11 +215,7 @@ bool SocketManager::FindServer(unsigned long& serverIpOutput)
 int SocketManager::SpreadIP()
 {
 	int retval;
-
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
+	isSpreadIpOn = true;
 
 	// socket()
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -249,7 +233,7 @@ int SocketManager::SpreadIP()
 	remoteaddr.sin_addr.s_addr = inet_addr(MULTICASTIP);
 	remoteaddr.sin_port = htons(REMOTEPORT);
 
-	while (1) {
+	while (isSpreadIpOn) {
 		// 바디 없이 헤더만 전송, 클라이언트에게 서버 아이피를 알리는 역할
 		retval = sendto(sock, "ServerIp", strlen("ServerIp"), 0,
 			(SOCKADDR *)&remoteaddr, sizeof(remoteaddr));
@@ -263,17 +247,68 @@ int SocketManager::SpreadIP()
 	}
 
 	closesocket(sock);
-	WSACleanup();
 	return 0;
 }
 
-void SocketManager::OpenTCPServer()
+int SocketManager::OpenTCPServer()
 {
-	
+	int retval;
+
+	// socket()
+	_Server_Socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (_Server_Socket == INVALID_SOCKET) err_quit(TEXT("socket()"));
+
+	// bind()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = bind(_Server_Socket, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit(TEXT("bind()"));
+
+	// listen()
+	retval = listen(_Server_Socket, SOMAXCONN);
+	if (retval == SOCKET_ERROR) err_quit(TEXT("listen()"));
+
+	// 데이터 통신에 사용할 변수
+	int addrlen;
+	char buf[BUFSIZE + 1];
+
+	// accept()
+	addrlen = sizeof(_Client_Addr);
+	_Client_Socket = accept(_Server_Socket, (SOCKADDR*)&_Client_Addr, &addrlen);
+	if (_Client_Socket == INVALID_SOCKET) {err_display(TEXT("accept()")); return -1;}
+
+	// 접속한 클라이언트 정보 출력
+	printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", inet_ntoa(_Client_Addr.sin_addr), ntohs(_Client_Addr.sin_port));
+
+	return 0;
 }
 
-void SocketManager::ConnectToTCPServer()
+int SocketManager::ConnectToTCPServer(unsigned long serverip)
 {
+	int retval;
 
+	// socket()
+	_Client_Socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (_Client_Socket == INVALID_SOCKET) err_quit(TEXT("socket()"));
+
+	// connect()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = serverip;
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(_Client_Socket, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit(TEXT("connect()"));
+	
+	printf("\n[TCP 클라이언트] 서버 연결: IP 주소=%s",inet_ntoa(serveraddr.sin_addr));
+	return 0;
+}
+
+void SocketManager::StopSpreadIp()
+{
+	isSpreadIpOn = false;
 }
 
