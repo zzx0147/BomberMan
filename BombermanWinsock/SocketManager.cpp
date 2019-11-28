@@ -2,8 +2,6 @@
 #include <iostream>
 #include <tchar.h>
 
-using namespace std;
-
 // 소켓 함수 오류 출력 후 종료
 void err_quit(TCHAR *msg)
 {
@@ -37,112 +35,13 @@ SocketManager::SocketManager()
 {
 	if (WSAStartup(MAKEWORD(2, 2), &_wsa) != 0) return;
 	isSpreadIpOn = false;
+	spreadIPThread = nullptr;
 }
 
 SocketManager::~SocketManager()
 {
 	WSACleanup();
-}
-
-int SocketManager::Send()
-{
-	int retval;
-	// socket()
-	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock == INVALID_SOCKET) err_quit(TEXT("socket()"));
-	// 멀티캐스트 TTL 설정
-	int ttl = 2;
-	retval = setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL,
-		(char *)&ttl, sizeof(ttl));
-	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
-	// 소켓 주소 구조체 초기화
-	SOCKADDR_IN remoteaddr;
-	ZeroMemory(&remoteaddr, sizeof(remoteaddr));
-	remoteaddr.sin_family = AF_INET;
-	remoteaddr.sin_addr.s_addr = inet_addr(MULTICASTIP);
-	remoteaddr.sin_port = htons(REMOTEPORT);
-	// 데이터 통신에 사용할 변수
-	char buf[BUFSIZE + 1];
-	int len;
-	// 멀티캐스트 데이터 보내기
-
-	while (1) {
-		// 데이터 입력
-		printf("\n[보낼 데이터] ");
-		if (fgets(buf, BUFSIZE + 1, stdin) == NULL)
-			break;
-		// '\n' 문자 제거
-		len = strlen(buf);
-		if (buf[len - 1] == '\n')
-			buf[len - 1] = '\0';
-		if (strlen(buf) == 0)
-			break;
-		// 데이터 보내기
-		retval = sendto(sock, buf, strlen(buf), 0,
-			(SOCKADDR *)&remoteaddr, sizeof(remoteaddr));
-		if (retval == SOCKET_ERROR) {
-			err_display(TEXT("sendto()"));
-			continue;
-		}
-		printf("[UDP] %d바이트를 보냈습니다.\n", retval);
-	}
-	// closesocket()
-	closesocket(sock);
-	return 0;
-}
-
-int SocketManager::Recive()
-{
-	int retval;
-	// socket()
-	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock == INVALID_SOCKET) err_quit(TEXT("socket()"));
-	// SO_REUSEADDR 옵션 설정
-	BOOL optval = TRUE;
-	retval = setsockopt(sock, SOL_SOCKET,
-		SO_REUSEADDR, (char *)&optval, sizeof(optval));
-	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
-	// bind()
-	SOCKADDR_IN localaddr;
-	ZeroMemory(&localaddr, sizeof(localaddr));
-	localaddr.sin_family = AF_INET;
-	localaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	localaddr.sin_port = htons(LOCALPORT);
-	retval = bind(sock, (SOCKADDR *)&localaddr, sizeof(localaddr));
-	if (retval == SOCKET_ERROR) err_quit(TEXT("bind()"));
-	// 멀티캐스트 그룹 가입
-	struct ip_mreq mreq;
-	mreq.imr_multiaddr.s_addr = inet_addr(MULTICASTIP);
-	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-	retval = setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-		(char *)&mreq, sizeof(mreq));
-	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
-	// 데이터 통신에 사용할 변수
-	SOCKADDR_IN peeraddr;
-	int addrlen;
-	char buf[BUFSIZE + 1];
-	// 멀티캐스트 데이터 받기
-	while (1) {
-		// 데이터 받기
-		addrlen = sizeof(peeraddr);
-		retval = recvfrom(sock, buf, BUFSIZE, 0,
-			(SOCKADDR *)&peeraddr, &addrlen);
-		if (retval == SOCKET_ERROR) {
-			err_display(TEXT("recvfrom()"));
-			continue;
-		}
-		// 받은 데이터 출력
-		buf[retval] = '\0';
-		printf("[UDP/%s:%d] %s\n", inet_ntoa(peeraddr.sin_addr),
-			ntohs(peeraddr.sin_port), buf);
-	}
-	// 멀티캐스트 그룹 탈퇴
-	retval = setsockopt(sock, IPPROTO_IP, IP_DROP_MEMBERSHIP,
-		(char *)&mreq, sizeof(mreq));
-	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
-	// closesocket()
-	closesocket(sock);
-	return 0;
+	if (spreadIPThread != nullptr) spreadIPThread->join();
 }
 
 bool SocketManager::FindServer(unsigned long& serverIpOutput)
@@ -164,13 +63,15 @@ bool SocketManager::FindServer(unsigned long& serverIpOutput)
 	ZeroMemory(&localaddr, sizeof(localaddr));
 	localaddr.sin_family = AF_INET;
 	localaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	localaddr.sin_port = htons(LOCALPORT);
+	localaddr.sin_port = htons(MULTICASTPORT);
+
 	retval = bind(sock, (SOCKADDR *)&localaddr, sizeof(localaddr));
 	if (retval == SOCKET_ERROR) err_quit(TEXT("bind()"));
 
 	// 멀티캐스트 그룹 가입
 	struct ip_mreq mreq;
-	mreq.imr_multiaddr.s_addr = inet_addr(MULTICASTIP);
+	inet_pton(AF_INET, MULTICASTIP, &mreq.imr_multiaddr.s_addr);
+
 	mreq.imr_interface.s_addr = htonl(INADDR_ANY);
 	retval = setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
 	if (retval == SOCKET_ERROR) err_quit(TEXT("setsockopt()"));
@@ -198,8 +99,9 @@ bool SocketManager::FindServer(unsigned long& serverIpOutput)
 	{
 		// 받은 데이터 출력
 		buf[retval] = '\0';
-		printf("[UDP/%s:%d] %s\n", inet_ntoa(peeraddr.sin_addr),
-			ntohs(peeraddr.sin_port), buf);
+		char ip[32];
+		inet_ntop(AF_INET, &peeraddr.sin_addr, ip, sizeof(ip));
+		printf("[UDP/%s:%d] %s\n", ip, ntohs(peeraddr.sin_port), buf);
 		serverIpOutput = peeraddr.sin_addr.S_un.S_addr;
 		serverFound = true;
 	}
@@ -230,19 +132,18 @@ int SocketManager::SpreadIP()
 	SOCKADDR_IN remoteaddr;
 	ZeroMemory(&remoteaddr, sizeof(remoteaddr));
 	remoteaddr.sin_family = AF_INET;
-	remoteaddr.sin_addr.s_addr = inet_addr(MULTICASTIP);
-	remoteaddr.sin_port = htons(REMOTEPORT);
+	inet_pton(AF_INET, MULTICASTIP, &remoteaddr.sin_addr.s_addr);
+	remoteaddr.sin_port = htons(MULTICASTPORT);
 
 	while (isSpreadIpOn) {
 		// 바디 없이 헤더만 전송, 클라이언트에게 서버 아이피를 알리는 역할
-		retval = sendto(sock, "ServerIp", strlen("ServerIp"), 0,
-			(SOCKADDR *)&remoteaddr, sizeof(remoteaddr));
+		retval = sendto(sock, "ServerIp", strlen("ServerIp"), 0, (SOCKADDR *)&remoteaddr, sizeof(remoteaddr));
 
 		if (retval == SOCKET_ERROR) {
 			err_display(TEXT("sendto()"));
 			continue;
 		}
-		cout << "서버 아이피를 뿌렸습니다" << endl;
+		printf("서버 아이피를 뿌렸습니다\n");
 		Sleep(1000);
 	}
 
@@ -250,38 +151,119 @@ int SocketManager::SpreadIP()
 	return 0;
 }
 
+int SocketManager::OpenUDPServer()
+{
+	int retval;
+
+	SOCKET _UDP_Socket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (_UDP_Socket == INVALID_SOCKET) err_quit(TEXT("socket()"));
+	// bind()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serveraddr.sin_port = htons(UDPPORT);
+	retval = bind(_UDP_Socket, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) err_quit(TEXT("bind()"));
+
+	// 데이터 통신에 사용할 변수
+
+	int addrlen;
+	char buf[BUFSIZE + 1];
+	// 클라이언트와 데이터 통신
+	addrlen = sizeof(_other_Addr_UDP);
+	retval = recvfrom(_UDP_Socket, buf, BUFSIZE, 0, (SOCKADDR *)&_other_Addr_UDP, &addrlen);
+	if (retval == SOCKET_ERROR) { err_display(TEXT("recvfrom()")); return -1; }
+	// 받은 데이터 출력
+	buf[retval] = '\0';
+	printf("[UDP/%s:%d] %s\n", inet_ntoa(_other_Addr_UDP.sin_addr), ntohs(_other_Addr_UDP.sin_port), buf);
+
+	Sleep(10000);
+
+	// 데이터 보내기
+	retval = sendto(_UDP_Socket, buf, retval, 0, (SOCKADDR *)&_other_Addr_UDP, sizeof(_other_Addr_UDP));
+	if (retval == SOCKET_ERROR) { err_display(TEXT("sendto()")); return -1; }
+
+	std::cout << "[서버] UDP 연결 성공" << std::endl;
+
+	return 0;
+}
+
+int SocketManager::ConnectToUDPServer(unsigned long ip)
+{
+	int retval;
+	// socket()
+
+	_socket_UDP = socket(AF_INET, SOCK_DGRAM, 0);
+	if (_socket_UDP == INVALID_SOCKET) err_quit(TEXT("socket()"));
+
+	// 소켓 주소 구조체 초기화
+	ZeroMemory(&_other_Addr_UDP, sizeof(_other_Addr_UDP));
+	_other_Addr_UDP.sin_family = AF_INET;
+	_other_Addr_UDP.sin_addr.s_addr = ip;
+	_other_Addr_UDP.sin_port = htons(UDPPORT);
+
+	// 데이터 통신에 사용할 변수
+	SOCKADDR_IN peeraddr;
+	int addrlen;
+	char buf[BUFSIZE + 1];
+
+	// 데이터 보내기
+	retval = sendto(_socket_UDP, "UDP client", strlen("UDP client"), 0, (SOCKADDR *)&_other_Addr_UDP, sizeof(_other_Addr_UDP));
+	if (retval == SOCKET_ERROR) { err_display(TEXT("sendto()"));  return -1;}
+	printf("[UDP 클라이언트] %d바이트를 보냈습니다.\n", retval);
+	
+	Sleep(10000);
+
+	// 데이터 받기
+	addrlen = sizeof(peeraddr);
+	retval = recvfrom(_socket_UDP, buf, BUFSIZE, 0, (SOCKADDR *)&peeraddr, &addrlen);
+	if (retval == SOCKET_ERROR) { err_display(TEXT("recvfrom()")); return -1; }
+
+	if (memcmp(&_other_Addr_UDP, &peeraddr, sizeof(_other_Addr_UDP)) == 0)
+	{
+		std::cout << "[클라이언트] UDP 연결 성공" << std::endl;
+		return 0;
+	}
+
+	Sleep(3000);
+
+	return -1;
+}
+
 int SocketManager::OpenTCPServer()
 {
 	int retval;
 
 	// socket()
-	_Server_Socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (_Server_Socket == INVALID_SOCKET) err_quit(TEXT("socket()"));
+	_listen_Socket_TCP = socket(AF_INET, SOCK_STREAM, 0);
+	if (_listen_Socket_TCP == INVALID_SOCKET) err_quit(TEXT("socket()"));
 
 	// bind()
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = bind(_Server_Socket, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_port = htons(TCPPORT);
+	retval = bind(_listen_Socket_TCP, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit(TEXT("bind()"));
 
 	// listen()
-	retval = listen(_Server_Socket, SOMAXCONN);
+	retval = listen(_listen_Socket_TCP, SOMAXCONN);
 	if (retval == SOCKET_ERROR) err_quit(TEXT("listen()"));
 
 	// 데이터 통신에 사용할 변수
 	int addrlen;
-	char buf[BUFSIZE + 1];
 
 	// accept()
-	addrlen = sizeof(_Client_Addr);
-	_Client_Socket = accept(_Server_Socket, (SOCKADDR*)&_Client_Addr, &addrlen);
-	if (_Client_Socket == INVALID_SOCKET) {err_display(TEXT("accept()")); return -1;}
+	addrlen = sizeof(_other_Addr_UDP);
+	_client_Socket_TCP = accept(_listen_Socket_TCP, (SOCKADDR*)&_other_Addr_UDP, &addrlen);
+	if (_client_Socket_TCP == INVALID_SOCKET) { err_display(TEXT("accept()")); return -1; }
 
 	// 접속한 클라이언트 정보 출력
-	printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", inet_ntoa(_Client_Addr.sin_addr), ntohs(_Client_Addr.sin_port));
+	char ip[32] = { 0 };
+	inet_ntop(AF_INET, &_other_Addr_UDP.sin_addr, ip, sizeof(ip));
+	printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", ip, ntohs(_other_Addr_UDP.sin_port));
 
 	return 0;
 }
@@ -291,24 +273,43 @@ int SocketManager::ConnectToTCPServer(unsigned long serverip)
 	int retval;
 
 	// socket()
-	_Client_Socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (_Client_Socket == INVALID_SOCKET) err_quit(TEXT("socket()"));
+	_client_Socket_TCP = socket(AF_INET, SOCK_STREAM, 0);
+	if (_client_Socket_TCP == INVALID_SOCKET) err_quit(TEXT("socket()"));
 
 	// connect()
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_addr.s_addr = serverip;
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = connect(_Client_Socket, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_port = htons(TCPPORT);
+	retval = connect(_client_Socket_TCP, (SOCKADDR *)&serveraddr, sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) err_quit(TEXT("connect()"));
-	
-	printf("\n[TCP 클라이언트] 서버 연결: IP 주소=%s",inet_ntoa(serveraddr.sin_addr));
+
+	char ip[32] = { 0 };
+	inet_ntop(AF_INET, &serveraddr.sin_addr, ip, sizeof(ip));
+	printf("\n[TCP 클라이언트] 서버 연결: IP 주소=%s", ip);
 	return 0;
 }
 
-void SocketManager::StopSpreadIp()
+void SocketManager::StartSpreadIP()
+{
+	spreadIPThread = new std::thread([&]() {this->SpreadIP(); });
+}
+
+void SocketManager::StopSpreadIP()
 {
 	isSpreadIpOn = false;
+}
+
+int SocketManager::ReciveTCP(char*data, const int& len)
+{
+	int retval = recv(_client_Socket_TCP, data, len, 0);
+	return retval;
+}
+
+int SocketManager::SendTCP(char* data, const int& len)
+{
+	send(_client_Socket_TCP, data, len, 0);
+	return 0;
 }
 
