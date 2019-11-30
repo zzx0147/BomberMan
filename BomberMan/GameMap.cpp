@@ -10,6 +10,9 @@
 #define BROKEWALL_SPR_X 4
 #define BROKEWALL_SPR_Y 3
 
+// Bomb.cpp Incompatible Data
+#define MAKINGBOMB 10
+
 int GameMap::_map[15][15];
 const int GameMap::_width;
 const int GameMap::_height;
@@ -66,19 +69,20 @@ void GameMap::Render()
 	}
 }
 
-void GameMap::SetBlock(const double x, const double y)
+void GameMap::SetBlock(const double x, const double y, const int blockNum)
 {
 	int px = round(x / 48);
 	int py = round(y / 48);
 	if (_width <= px || _height <= py) return;
 
-	_map[py][px] = 1;
+	_map[py][px] = blockNum;
 }
 
 void GameMap::RemoveBlock(const double x, const double y)
 {
 	int px = round(x / 48);
 	int py = round(y / 48);
+
 	if (_width <= px || _height <= py) return;
 
 	_map[py][px] = 0;
@@ -86,6 +90,8 @@ void GameMap::RemoveBlock(const double x, const double y)
 
 const bool GameMap::IsMovePoint(const double x, const double y)
 {
+	if (IsBomb(x, y)) return true;
+
 	double px = x / 48;
 	double py = y / 48;
 
@@ -95,4 +101,12 @@ const bool GameMap::IsMovePoint(const double x, const double y)
 	if (_map[(int) ceil(py)][(int)floor(px)]) return false;
 
 	return true;
+}
+
+const bool GameMap::IsBomb(const int x, const int y)
+{
+	int px = round(x / 48);
+	int py = round(y / 48);
+
+	return _map[py][px] == MAKINGBOMB;
 }

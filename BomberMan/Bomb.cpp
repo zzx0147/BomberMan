@@ -4,9 +4,10 @@
 
 #include "SpritesLoader.h"
 #include "BombManager.h"
-#include "Player.h"
 #include "GameMap.h"
 
+// GameMap.cpp Incompatible Data
+#define MAKINGBOMB 10
 
 Bomb::Bomb()
 {
@@ -33,6 +34,8 @@ void Bomb::Init(const int x, const int y, const int idxNum)
 	_delTime = 0;
 	_isActive = true;
 	_isOnPlayer = true;
+
+	GameMap::SetBlock(_x, _y, MAKINGBOMB);
 }
 
 void Bomb::Update(double deltaTime)
@@ -44,19 +47,10 @@ void Bomb::Update(double deltaTime)
 	if (_aniSpeed > 2 || _aniSpeed < 0) sign *= -1;
 
 	_delTime += deltaTime;
-	if (_delTime > 3.0)
-	{
-		Burst();
-	}
+	if (_delTime > 3.0) Burst();
 	
-	if (!_isOnPlayer) return;
-
-	if (!(round(Player::GetX() / 48) * 48 == _x && round(Player::GetY() / 48) * 48 == _y))
-	{
-		_isOnPlayer = false;
-
-		GameMap::SetBlock(_x, _y);
-	}
+	if (_isOnPlayer)	GameMap::SetBlock(_x, _y, MAKINGBOMB);
+	else				GameMap::SetBlock(_x, _y, MAKINGBOMB - 1);
 }
 
 void Bomb::Render()
@@ -83,4 +77,14 @@ const double Bomb::GetX() const
 const double Bomb::GetY() const
 {
 	return _y;
+}
+
+const bool Bomb::GetOnPlayer() const
+{
+	return _isOnPlayer;
+}
+
+void Bomb::SetOnPlayer(const bool isOnPlayer)
+{
+	_isOnPlayer = isOnPlayer;
 }

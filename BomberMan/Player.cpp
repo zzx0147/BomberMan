@@ -7,12 +7,6 @@
 #include "InputClass.h"
 #include "GameMap.h"
 
-double Player::_x;
-double Player::_y;
-
-eDirection Player::_dir;
-double Player::_aniSpeed;
-
 Player::Player()
 {
 }
@@ -39,6 +33,7 @@ void Player::Update(double deltaTime)
 	double px = _x;
 	double py = _y;
 
+	aniResetTime += deltaTime;
 	// Input Update
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
@@ -81,6 +76,8 @@ void Player::Update(double deltaTime)
 	// Move Update
 	if (GameMap::IsMovePoint(px, py))
 	{
+		GameMap::SetBlock(px, py, 8);
+
 		_x = px;
 		_y = py;
 
@@ -92,7 +89,6 @@ void Player::Update(double deltaTime)
 	_y = _y < 0 ? 0 : _y > 720 - 48 ? 720 - 48 : _y;
 
 	// Ani Update
-	aniResetTime += deltaTime;
 	if (.2f < aniResetTime)
 	{
 		aniResetTime = 0;

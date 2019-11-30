@@ -26,5 +26,6 @@ public:
 	const int GetIdx() const;
 	const double GetX() const;
 	const double GetY() const;
+	const bool GetOnPlayer() const; void SetOnPlayer(const bool isOnPlayer);
 };
 

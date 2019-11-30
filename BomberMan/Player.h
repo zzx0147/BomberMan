@@ -8,17 +8,17 @@ public:
 	~Player();
 
 	// Character을(를) 통해 상속됨
-	static void Init();
-	static void Update(double deltaTime);
-	static void Render();
+	void Init();
+	void Update(double deltaTime);
+	void Render();
 
-	static const double GetX();
-	static const double GetY();
+	const double GetX();
+	const double GetY();
 private:
-	static double _x;
-	static double _y;
+	double _x;
+	double _y;
 
-	static eDirection _dir;
-	static double _aniSpeed;
+	eDirection _dir;
+	double _aniSpeed;
 };
 

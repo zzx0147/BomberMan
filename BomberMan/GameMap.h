@@ -13,9 +13,10 @@ public:
 	static void Update();
 	static void Render();
 
-	static void SetBlock(const double x, const double y);
+	static void SetBlock(const double x, const double y, const int blockNum = 2);
 	static void RemoveBlock(const double x, const double y);
 
 	static const bool IsMovePoint(const double px, const double py);
+	static const bool IsBomb(const int px, const int py);
 };
 

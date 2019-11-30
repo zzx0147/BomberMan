@@ -3,11 +3,15 @@
 #include <cmath>
 
 #include "Bomb.h"
+#include "Player.h"
 #include "GameMap.h"
+#include "InputClass.h"
 
-std::list<Bomb*> BombManager::_bombs;//[_maxCount];
-std::list<Bomb*> BombManager::_removeBombs;
+
+std::vector<Bomb*> BombManager::_bombs;
+std::vector<Bomb*> BombManager::_removeBombs;
 int  BombManager::_count = 0;
+std::vector<Player*> BombManager::_players;
 
 BombManager::BombManager()
 {
@@ -20,13 +24,19 @@ BombManager::~BombManager()
 
 void BombManager::CreateBomb(const int x, const int y)
 {
-	if (GameMap::IsMovePoint(x, y))
-	{
-		Bomb* Bomb(new Bomb);
-		Bomb->Init(round(x / 48) * 48, round(y / 48) * 48, _count++);
+	int px = round(x / 48.0) * 48.0;
+	int py = round(y / 48.0) * 48.0;
 
-		_bombs.push_back(Bomb);
-	}
+	for (auto it = _bombs.begin(); it != _bombs.end(); ++it)
+		if ((*it)->GetX() == px && (*it)->GetY() == py) 
+			return;
+
+	Bomb* Bomb(new Bomb);
+	Bomb->Init(px, py, _count++);
+
+	_bombs.push_back(Bomb);
+
+	InputClass::KeyUp(VK_SPACE);
 }
 
 void BombManager::DeleteBomb(const int idx)
@@ -48,6 +58,11 @@ void BombManager::DeleteBomb(const int idx)
 	}
 }
 
+void BombManager::AddPlayer(Player & p)
+{
+	_players.push_back(&p);
+}
+
 void BombManager::Init()
 {
 	_count = 0;
@@ -55,29 +70,45 @@ void BombManager::Init()
 
 void BombManager::Update(double deltaTime)
 {
-	if (_bombs.empty()) return;
-	std::list<Bomb*>::iterator it;
-	for (it = _bombs.begin(); it != _bombs.end(); ++it)
+	if (!_bombs.empty())
 	{
-		(*it)->Update(deltaTime);
-	}
-
-	if (_removeBombs.empty()) return;
-
-	for (it = _removeBombs.begin(); it != _removeBombs.end(); ++it)
-	{
-		Bomb* removeBomb = *it;
-		for (auto iter = _bombs.begin(); iter != _bombs.end(); ++iter)
-			if ((*iter)->GetIdx() == (*it)->GetIdx())
+		for (auto itb = _bombs.begin(); itb != _bombs.end(); ++itb)
+		{
+			if ((*itb)->GetOnPlayer() && !_players.empty())
 			{
-				_bombs.erase(iter);
-				break;
+				int bx = round((*itb)->GetX() / 48.0) * 48;
+				int by = round((*itb)->GetY() / 48.0) * 48;
+
+				for (auto itp = _players.begin(); itp != _players.end(); ++itp)
+				{
+					int px = round((*itp)->GetX() / 48.0) * 48 + 24;
+					int py = round((*itp)->GetY() / 48.0) * 48 + 24;
+
+
+				}
 			}
 
-		_removeBombs.erase(it);
+			(*itb)->Update(deltaTime);
+		}
+	}
 
-		delete removeBomb;
-		if (_removeBombs.empty()) break;
+	if (!_removeBombs.empty())
+	{
+		for (auto itrb = _removeBombs.begin(); itrb != _removeBombs.end(); ++itrb)
+		{
+			Bomb* removeBomb = *itrb;
+			for (auto iter = _bombs.begin(); iter != _bombs.end(); ++iter)
+				if ((*iter)->GetIdx() == (*itrb)->GetIdx())
+				{
+					_bombs.erase(iter);
+					break;
+				}
+
+			_removeBombs.erase(itrb);
+
+			delete removeBomb;
+			if (_removeBombs.empty()) break;
+		}
 	}
 }
 
@@ -95,13 +126,24 @@ void BombManager::Release()
 {
 	if (_bombs.empty()) return;
 
-	for (auto it = _bombs.begin(); it != _bombs.end(); ++it)
+	for (auto itb = _bombs.begin(); itb != _bombs.end(); ++itb)
 	{
-		Bomb* removeBomb = *it;
+		Bomb* removeBomb = *itb;
 
-		_bombs.erase(it);
+		_bombs.erase(itb);
 		--_count;
 
 		delete removeBomb;
+	}
+
+	if (_players.empty()) return;
+
+	for (auto itp = _players.begin(); itp != _players.end(); ++itp)
+	{
+		Player* removePlayer = *itp;
+
+		_players.erase(itp);
+		
+		delete removePlayer;
 	}
 }

@@ -53,7 +53,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	SpritesLoader::Initialize(hInstance);
 
 	GameMap::Init();
-	Player::Init();
+	Player player;
+	player.Init();
+
+	BombManager::AddPlayer(player);
 
 	HWND hWnd;
 	hWnd = CreateWindow(szWndAppName, szWndAppName, WS_OVERLAPPEDWINDOW,
@@ -84,8 +87,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			updateTime += deltaTime;
 			fpsShowTime += deltaTime;
 
-			Player::Update(deltaTime);
+			GameMap::Update();
 			BombManager::Update(deltaTime);
+
+			player.Update(deltaTime);
 
 			if (1.0 / 60.0 < updateTime)
 			{
@@ -96,7 +101,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				GameMap::Render();
 				BombManager::Render();
 
-				Player::Render();
+				player.Render();
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
 
