@@ -1,4 +1,5 @@
 #pragma once
+#include "SocketManager.h"
 #include <Windows.h>
 
 enum eDirection

@@ -1,10 +1,11 @@
 #pragma once
 #include "Character.h"
 
+
 class Player : public Character
 {
 public:
-	Player();
+	Player(SocketManager&);
 	~Player();
 
 	// Character을(를) 통해 상속됨
@@ -14,11 +15,14 @@ public:
 
 	const double GetX();
 	const double GetY();
-private:
-	double _x;
-	double _y;
 
+private:	
 	eDirection _dir;
 	double _aniSpeed;
+
+protected:
+	SocketManager& socket;
+	double _x;
+	double _y;
 };
 

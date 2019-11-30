@@ -7,7 +7,7 @@
 #include "InputClass.h"
 #include "GameMap.h"
 
-Player::Player()
+Player::Player(SocketManager& socket):socket(socket)
 {
 }
 
@@ -94,6 +94,13 @@ void Player::Update(double deltaTime)
 		aniResetTime = 0;
 		_aniSpeed = 1;
 	}
+
+	Packet packet;
+	packet.x = _x;
+	packet.y = _y;
+
+	socket.SendUDPOnce(packet);
+
 }
 
 void Player::Render()

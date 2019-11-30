@@ -13,6 +13,12 @@
 #define UDP_S2C_PORT 3319 //서버에서 클라로 데이터를 전송할때 쓰는 포트
 #define UDP_C2S_PORT 3320 //클라에서 서버로 데이터를 전송할때 쓰는 포트
 
+struct Packet
+{
+	double x;
+	double y;
+};
+
 class SocketManager
 {
 public:
@@ -38,11 +44,14 @@ public:
 	void StopReciveUDP();
 	std::thread* StartSendUDP();
 	void StopSendUDP();
-	
+	int SendUDPOnce(const Packet&);
+	int RecvUDPOnce(Packet&);
+
 private:
 	int SpreadIP();//자신의 주소를 멀티캐스트로 뿌림, 뿌린 주소를 FindServer로 받아옴
 	int ReciveUDP();
 	int SendUDP();
+
 
 
 private:

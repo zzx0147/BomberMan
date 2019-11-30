@@ -1,5 +1,7 @@
-#include <Windows.h>
+#pragma comment(lib,"Msimg32.lib")
 
+#include "SocketManager.h"
+#include <Windows.h>
 #include <sstream>
 #include <crtdbg.h>
 
@@ -8,20 +10,21 @@
 #include "InputClass.h"
 #include "TimeClass.h"
 #include "Player.h"
+#include "OtherPlayer.h"
 #include "GameMap.h"
 #include "BombManager.h"
-
 #include "SpritesLoader.h"
 
-using namespace std;
 
-#pragma comment(lib,"Msimg32.lib")
+using namespace std;
 
 TCHAR szWndAppName[] = TEXT("WndTest");
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE g_hInstance;
+
+SocketManager s;
 
 int APIENTRY WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -53,8 +56,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	SpritesLoader::Initialize(hInstance);
 
 	GameMap::Init();
-	Player player;
+	Player player(s);
 	player.Init();
+
+	OtherPlayer otherPlayer(s);
+	otherPlayer.Init();
 
 	BombManager::AddPlayer(player);
 
@@ -91,6 +97,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			BombManager::Update(deltaTime);
 
 			player.Update(deltaTime);
+			otherPlayer.Update(deltaTime);
 
 			if (1.0 / 60.0 < updateTime)
 			{
@@ -102,6 +109,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				BombManager::Render();
 
 				player.Render();
+				otherPlayer.Render();
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
 
@@ -140,12 +148,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-		case WM_KEYDOWN: InputClass::KeyDown((unsigned int)wParam); return 0;
-		case WM_KEYUP: InputClass::KeyUp((unsigned int)wParam); return 0;
+	case WM_CREATE:
+		unsigned long ip;
+		if (s.FindServer(ip))
+		{
+			s.ConnectToTCPServer(ip);
+			s.InitUDP_Client(ip);
+		}
+		else
+		{
+			s.StartSpreadIP();
+			s.OpenTCPServer(ip);
+			s.InitUDP_Server(ip);
+		}
 
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			return 0;
+	case WM_KEYDOWN: InputClass::KeyDown((unsigned int)wParam); return 0;
+	
+	case WM_KEYUP: InputClass::KeyUp((unsigned int)wParam); return 0;
+
+
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
