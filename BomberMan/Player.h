@@ -17,12 +17,14 @@ public:
 	const double GetY();
 
 private:	
-	eDirection _dir;
-	double _aniSpeed;
+
+
 
 protected:
 	SocketManager& socket;
 	double _x;
 	double _y;
+	double _aniSpeed;
+	eDirection _dir;
 };
 

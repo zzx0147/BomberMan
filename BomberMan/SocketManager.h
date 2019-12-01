@@ -9,9 +9,9 @@
 #define MULTICASTIP "235.7.8.9"
 #define MULTICASTPORT 3317
 #define BUFSIZE 512
-#define TCPPORT 3318
-#define UDP_S2C_PORT 3319 //서버에서 클라로 데이터를 전송할때 쓰는 포트
-#define UDP_C2S_PORT 3320 //클라에서 서버로 데이터를 전송할때 쓰는 포트
+#define TCPPORT 9090
+#define UDP_S2C_PORT 5080 //서버에서 클라로 데이터를 전송할때 쓰는 포트
+#define UDP_C2S_PORT 5090 //클라에서 서버로 데이터를 전송할때 쓰는 포트
 
 struct Packet
 {
@@ -33,12 +33,12 @@ public:
 	int ConnectToTCPServer(unsigned long);//TCP 서버에 접속한다. 둘중 하나만 사용할 것! 
 	                          //_Client_Socket을 공유하기 때문! 또한 Recive()와 Send() 함수도 공유할 예정
 
-	int ReciveTCP(char*,const int&);
-	int SendTCP(char*,const int&);
+	int ReciveTCP(char*,const int&);//연결된 TCP를 통해 데이터를 받는다.
+	int SendTCP(char*,const int&);//연결된 TCP를 통해 데이터를 보낸다.
 
-	int InitUDP_Server(unsigned long);
-	int InitUDP_Client(unsigned long);
-	int InitUDP(unsigned short, unsigned short,unsigned long);
+	int InitUDP_Server(unsigned long);//서버에서 UDP 초기화      // 이 둘은 보내고 받는 포트 설정만 다르다
+	int InitUDP_Client(unsigned long);//클라이언트에서 UDP 초기화//
+	int InitUDP(unsigned short, unsigned short,unsigned long);//UDP 통신 초기화
 
 	std::thread* StartReciveUDP();
 	void StopReciveUDP();

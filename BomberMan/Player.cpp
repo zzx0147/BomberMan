@@ -70,6 +70,8 @@ void Player::Update(double deltaTime)
 		if (GameMap::IsMovePoint(_x, _y))
 		{
 			BombManager::CreateBomb(_x, _y);
+			Packet sendbomb = {0};
+			socket.SendTCP((char*)&sendbomb,sizeof(sendbomb));
 		}
 	}
 
