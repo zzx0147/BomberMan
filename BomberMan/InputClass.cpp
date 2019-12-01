@@ -18,7 +18,7 @@ InputClass::~InputClass()
 void InputClass::Initialize()
 {
 	
-	for (int i = 0; i < 256; ++i)//m_keys ÃÊ±âÈ­
+	for (int i = 0; i < 256; ++i)
 	{
 		m_keys[i] = false;
 	}

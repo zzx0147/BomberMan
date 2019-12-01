@@ -113,7 +113,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 				SpritesLoader::Render(g_hInstance, hdcMain);
 
-				// FPS Show
 				++fps;
 				if (1.0 < fpsShowTime)
 				{

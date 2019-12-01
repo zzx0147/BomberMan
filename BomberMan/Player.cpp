@@ -34,10 +34,10 @@ void Player::Update(double deltaTime)
 	double py = _y;
 
 	aniResetTime += deltaTime;
-	// Input Update
 	if (InputClass::IsKeyDown(VK_LEFT))
 	{
 		_dir = eDirection::LEFT;
+		aniResetTime = 0;
 
 		px -= moveSpeed;
 		py = round(_y / 48) * 48;
@@ -45,6 +45,7 @@ void Player::Update(double deltaTime)
 	else if (InputClass::IsKeyDown(VK_RIGHT))
 	{
 		_dir = eDirection::RIGHT;
+		aniResetTime = 0;
 
 		px += moveSpeed;
 		py = round(_y / 48) * 48;
@@ -53,6 +54,7 @@ void Player::Update(double deltaTime)
 	if (InputClass::IsKeyDown(VK_UP))
 	{
 		_dir = eDirection::UP;
+		aniResetTime = 0;
 
 		px = round(_x / 48) * 48;
 		py -= moveSpeed;
@@ -60,6 +62,7 @@ void Player::Update(double deltaTime)
 	else if (InputClass::IsKeyDown(VK_DOWN))
 	{
 		_dir = eDirection::DOWN;
+		aniResetTime = 0;
 
 		px = round(_x / 48) * 48;
 		py += moveSpeed;
@@ -75,7 +78,6 @@ void Player::Update(double deltaTime)
 		}
 	}
 
-	// Move Update
 	if (GameMap::IsMovePoint(px, py))
 	{
 		GameMap::SetBlock(px, py, 8);
@@ -83,18 +85,20 @@ void Player::Update(double deltaTime)
 		_x = px;
 		_y = py;
 
-		aniResetTime = 0;
-		_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
+		_aniSpeed += deltaTime * 3;
 	}
 
 	_x = _x < 0 ? 0 : _x > 720 - 48 ? 720 - 48 : _x;
 	_y = _y < 0 ? 0 : _y > 720 - 48 ? 720 - 48 : _y;
 
-	// Ani Update
 	if (.2f < aniResetTime)
 	{
-		aniResetTime = 0;
 		_aniSpeed = 1;
+	}
+
+	if (_aniSpeed > 2)
+	{
+		_aniSpeed = 0;
 	}
 
 	Packet packet;
@@ -102,7 +106,6 @@ void Player::Update(double deltaTime)
 	packet.y = _y;
 
 	socket.SendUDPOnce(packet);
-
 }
 
 void Player::Render()

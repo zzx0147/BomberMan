@@ -8,17 +8,12 @@ public:
 	Player(SocketManager&);
 	~Player();
 
-	// Character을(를) 통해 상속됨
 	void Init();
 	void Update(double deltaTime);
 	void Render();
 
 	const double GetX();
 	const double GetY();
-
-private:	
-
-
 
 protected:
 	SocketManager& socket;

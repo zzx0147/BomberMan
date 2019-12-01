@@ -30,10 +30,10 @@ void OtherPlayer::Update(double deltaTime)
 	double py = _y;
 
 	aniResetTime += deltaTime;
-	// Input Update
 	if (p.x < px)
 	{
 		_dir = eDirection::LEFT;
+		aniResetTime = 0;
 
 		px = p.x;
 		py = p.y;
@@ -41,6 +41,7 @@ void OtherPlayer::Update(double deltaTime)
 	else if (p.x > px)
 	{
 		_dir = eDirection::RIGHT;
+		aniResetTime = 0;
 
 		px = p.x;
 		py = p.y;
@@ -49,6 +50,7 @@ void OtherPlayer::Update(double deltaTime)
 	if (p.y < py)
 	{
 		_dir = eDirection::UP;
+		aniResetTime = 0;
 
 		px = p.x;
 		py = p.y;
@@ -56,20 +58,12 @@ void OtherPlayer::Update(double deltaTime)
 	else if (p.y > py)
 	{
 		_dir = eDirection::DOWN;
+		aniResetTime = 0;
 
 		px = p.x;
 		py = p.y;
 	}
 
-	/*if (InputClass::IsKeyDown(VK_SPACE))
-	{
-		if (GameMap::IsMovePoint(_x, _y))
-		{
-			BombManager::CreateBomb(_x, _y);
-		}
-	}*/
-
-	// Move Update
 	if (GameMap::IsMovePoint(px, py))
 	{
 		GameMap::SetBlock(px, py, 8);
@@ -77,20 +71,23 @@ void OtherPlayer::Update(double deltaTime)
 		_x = px;
 		_y = py;
 
-		aniResetTime = 0;
 		_aniSpeed = _aniSpeed > 2 ? 0 : _aniSpeed + (deltaTime * 3);
 	}
 
 	_x = _x < 0 ? 0 : _x > 720 - 48 ? 720 - 48 : _x;
 	_y = _y < 0 ? 0 : _y > 720 - 48 ? 720 - 48 : _y;
 
-	// Ani Update
 	if (.2f < aniResetTime)
 	{
-		aniResetTime = 0;
 		_aniSpeed = 1;
 	}
+
+	if (_aniSpeed > 2)
+	{
+		_aniSpeed = 0;
+	}
 }
+
 
 void OtherPlayer::SetBomb()
 {
